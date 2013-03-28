@@ -1,0 +1,23 @@
+{
+  "name": "hookit",
+  "version": "0.0.1",
+  "description": "A function for shimming all node.js core IO calls allowing callback wraping.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/CrabDude/hookit.git"
+  },
+  "keywords": [
+    "hook",
+    "wrap",
+    "core",
+    "io"
+  ],
+  "author": "Adam Crabtree",
+  "license": "MIT",
+  "readmeFilename": "README.md",
+  "gitHead": "10a8993ee901c0fc9d1f0fb5543177e205caabaf"
+}
