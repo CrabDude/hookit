@@ -2,25 +2,25 @@
  * Shims built-in async functions and automatically wraps callbacks with "wrap"
  * @param {function} wrap The function to return the new callback
  */
-module.exports = function hook(wrap) {
+module.exports = function hookit(wrap) {
 	if (alreadyRequired) throw new Error("This should only be required and used once")
 	alreadyRequired = true
-	
+
 	// Wrap setTimeout and setInterval
-	;["setTimeout", "setInterval"].forEach(function (name) {
+	;['setTimeout', 'setInterval', 'setImmediate'].forEach(function (name) {
 		var original = this[name]
 		this[name] = function (callback) {
 			arguments[0] = wrap(callback, name)
 			return original.apply(this, arguments)
 		}
 	})
-	
+
 	// Wrap process.nextTick
 	var nextTick = process.nextTick
 	process.nextTick = function wrappedNextTick(callback) {
 		return nextTick.call(this, wrap(callback, 'process.nextTick'))
 	}
-	
+
 	// Wrap FS module async functions
 	var FS = require('fs')
 	Object.keys(FS).forEach(function (name) {
@@ -35,9 +35,15 @@ module.exports = function hook(wrap) {
 			return original.apply(this, arguments)
 		}
 	})
-	
+
 	// Wrap EventEmitters
 	var EventEmitter = require('events').EventEmitter
+
+	var once = EventEmitter.prototype.once
+	EventEmitter.prototype.once = function wrappedOnce(event, callback) {
+		return once.call(this, event, wrap(callback, 'EventEmitter.once'))
+	}
+
 	var onEvent = EventEmitter.prototype.on
 	EventEmitter.prototype.on = EventEmitter.prototype.addListener = function (type, listener) {
 		var self = this
