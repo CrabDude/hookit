@@ -3,6 +3,15 @@
  * @param {function} wrap The function to return the new callback
  */
 module.exports = function hookit(wrap) {
+	var HookId = 0
+		, nextTick
+		, fs
+		, EventEmitter
+		, once
+		, on
+		, removeListener
+		, addListener
+
 	if (alreadyRequired) throw new Error("This should only be required and used once")
 	alreadyRequired = true
 
@@ -16,18 +25,18 @@ module.exports = function hookit(wrap) {
 	})
 
 	// Wrap process.nextTick
-	var nextTick = process.nextTick
+	nextTick = process.nextTick
 	process.nextTick = function wrappedNextTick(callback) {
 		return nextTick.call(this, wrap(callback, 'process.nextTick'))
 	}
 
-	// Wrap FS module async functions
-	var FS = require('fs')
-	Object.keys(FS).forEach(function (name) {
+	// Wrap fs module async functions
+	fs = require('fs')
+	Object.keys(fs).forEach(function (name) {
 		// If it has a *Sync counterpart, it's probably async
-		if (!FS.hasOwnProperty(name + "Sync")) return
-		var original = FS[name]
-		FS[name] = function () {
+		if (!fs.hasOwnProperty(name + "Sync")) return
+		var original = fs[name]
+		fs[name] = function () {
 			var i = arguments.length - 1
 			if (typeof arguments[i] === 'function') {
 				arguments[i] = wrap(arguments[i], 'fs.'+name)
@@ -37,87 +46,35 @@ module.exports = function hookit(wrap) {
 	})
 
 	// Wrap EventEmitters
-	var EventEmitter = require('events').EventEmitter
+	EventEmitter = require('events').EventEmitter
 
-	var once = EventEmitter.prototype.once
+	once = EventEmitter.prototype.once
 	EventEmitter.prototype.once = function wrappedOnce(event, callback) {
 		return once.call(this, event, wrap(callback, 'EventEmitter.once'))
 	}
 
-	var onEvent = EventEmitter.prototype.on
-	EventEmitter.prototype.on = EventEmitter.prototype.addListener = function (type, listener) {
-		var self = this
-			, list
-			, id
-			, origListener = listener
-
-		if (this === process && type === 'uncaughtException') {
-			listener = function(e) {
-				if (e.domain == null) origListener(e)
-			}
-		}
-
-		self._hookListeners = self._hookListeners || {}
-		id = listener._hookId = listener._hookId || ''+process.hrtime()
-		self._hookListeners[id] = self._hookListeners[id] || {}
-
-		if (!self._hookListeners[id][type]) {
-			self._hookListeners[id][type] = []
-			self._hookListeners[id][type].callback = function() {
-				var args = arguments
-					, list = self._hookListeners[id][type]
-
-		    for (var i = 0, length = list.length; i < length; i++) {
-			    list[i].apply(self, args)
-		    }
-			}
-		}
-
-		self._hookListeners[id][type].push(wrap(listener, 'EventEmitter.on'))
-		return onEvent.call(this, type, self._hookListeners[id][type].callback)
+	on = EventEmitter.prototype.on
+	addListener = EventEmitter.prototype.addListener
+	EventEmitter.prototype.on = EventEmitter.prototype.addListener = function wrappedAddListener(type, listener) {
+		var hookListener = wrap(listener, 'EventEmitter.addListener')
+		hookListener.__original = listener
+		return addListener.call(this, type, hookListener)
 	}
-	var removeEvent = EventEmitter.prototype.removeListener
-	EventEmitter.prototype.removeListener = function (type, listener) {
-		var empty = true
-			, id = listener._hookId
-			, list
-			, hookListener
-			, hookCallback
 
-		if (this._hookListeners &&
-				this._hookListeners[id] &&
-				this._hookListeners[id][type]) {
-			hookCallback = this._hookListeners[id][type].callback
-			hookListener = this._hookListeners[id]
-			list = hookListener[type]
+	removeListener = EventEmitter.prototype.removeListener
+	EventEmitter.prototype.removeListener = function wrappedRemoveListener(type, listener) {
+		var listeners = this.listeners(type)
+			, i = listeners.length
+			, hookCallback = function() {}
 
-			list.shift()
-			if (!list.length) {
-				delete hookListener[type]
-			}
-			for (var i in hookListener) {
-				if (hookListener.hasOwnProperty(i)) {
-					empty = false
-					break;
-				}
-			}
-			if (empty) {
-				delete this._hookListeners[id]
-			}
-			listener = hookCallback
-		}
-		return removeEvent.call(this, type, listener)
-	}
-	var removeAll = EventEmitter.prototype.removeAllListeners
-	EventEmitter.prototype.removeAllListeners = function (type) {
-		for (var id in this._hookListeners) {
-			if (this._hookListeners.hasOwnProperty(id)) {
-				if (this._hookListeners[id][type]) {
-					delete this._hookListeners[id][type]
-				}
+		while(i--) {
+			if (listeners[i].__original === listener) {
+				hookCallback = listeners[i]
+				break
 			}
 		}
-		return removeAll.call(this, type)
+
+		return removeListener.call(this, type, hookCallback)
 	}
 }
 
