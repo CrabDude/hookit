@@ -3,11 +3,9 @@
  * @param {function} wrap The function to return the new callback
  */
 module.exports = function hookit(wrap) {
-	var HookId = 0
-		, nextTick
+	var nextTick
 		, fs
 		, EventEmitter
-		, once
 		, on
 		, removeListener
 		, addListener
@@ -48,11 +46,6 @@ module.exports = function hookit(wrap) {
 	// Wrap EventEmitters
 	EventEmitter = require('events').EventEmitter
 
-	once = EventEmitter.prototype.once
-	EventEmitter.prototype.once = function wrappedOnce(event, callback) {
-		return once.call(this, event, wrap(callback, 'EventEmitter.once'))
-	}
-
 	on = EventEmitter.prototype.on
 	addListener = EventEmitter.prototype.addListener
 	EventEmitter.prototype.on = EventEmitter.prototype.addListener = function wrappedAddListener(type, listener) {
@@ -65,16 +58,15 @@ module.exports = function hookit(wrap) {
 	EventEmitter.prototype.removeListener = function wrappedRemoveListener(type, listener) {
 		var listeners = this.listeners(type)
 			, i = listeners.length
-			, hookCallback = function() {}
 
 		while(i--) {
 			if (listeners[i].__original === listener) {
-				hookCallback = listeners[i]
+				listener = listeners[i]
 				break
 			}
 		}
 
-		return removeListener.call(this, type, hookCallback)
+		return removeListener.call(this, type, listener)
 	}
 }
 
