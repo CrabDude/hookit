@@ -2,7 +2,10 @@
  * Shims built-in async functions and automatically wraps callbacks with "wrap"
  * @param {function} wrap The function to return the new callback
  */
-module.exports = function hookit(wrap) {
+
+module.exports = process.hookit = 'function' === typeof process.hookit ? process.hookit : hookit
+
+function hookit(wrap) {
 	var nextTick
 		, fs
 		, EventEmitter
