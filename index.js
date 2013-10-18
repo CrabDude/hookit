@@ -13,7 +13,7 @@ function hookit(wrap) {
 		, removeListener
 		, addListener
 
-	if (alreadyRequired) throw new Error("This should only be required and used once")
+	if (alreadyRequired) return
 	alreadyRequired = true
 
 	// Wrap setTimeout and setInterval
