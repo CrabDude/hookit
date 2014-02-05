@@ -1,6 +1,6 @@
 {
   "name": "hookit",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A function for shimming all node.js core IO calls allowing callback wraping.",
   "main": "index.js",
   "scripts": {
