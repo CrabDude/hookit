@@ -18,10 +18,12 @@ function hookit(wrap) {
 
 	// Wrap setTimeout and setInterval
 	;['setTimeout', 'setInterval', 'setImmediate'].forEach(function (name) {
-		var original = this[name]
-		this[name] = function (callback) {
-			arguments[0] = wrap(callback, name)
-			return original.apply(this, arguments)
+		if (this[name]) {
+			var original = this[name]
+			this[name] = function (callback) {
+				arguments[0] = wrap(callback, name)
+				return original.apply(this, arguments)
+			}
 		}
 	})
 
