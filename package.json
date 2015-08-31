@@ -16,8 +16,17 @@
     "core",
     "io"
   ],
-  "author": "Adam Crabtree",
+  "author": {
+    "name": "Adam Crabtree"
+  },
   "license": "MIT",
   "readmeFilename": "README.md",
-  "gitHead": "10a8993ee901c0fc9d1f0fb5543177e205caabaf"
+  "gitHead": "10a8993ee901c0fc9d1f0fb5543177e205caabaf",
+  "readme": "hook\n====\n\nShim all core IO calls and allow callback shimming via wrap function.\n\n###Installation\n```\n$ npm install hookit\n```\n###Usage:\n```javascript\nhookit(function generateShim(callback, fnName) {\n  return function() {\n    try {\n      callback.apply(this, arguments);\n    } finally {\n      console.log('bummer.')\n    }\n  }\n})\n\nprocess.nextTick(function() {\n  throw new Error('here') // Will log \"bummer\" before we crash on error\n})\n```\n",
+  "bugs": {
+    "url": "https://github.com/CrabDude/hookit/issues"
+  },
+  "homepage": "https://github.com/CrabDude/hookit",
+  "_id": "hookit@0.1.1",
+  "_from": "hookit@~0.1.1"
 }

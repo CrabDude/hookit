@@ -1,15 +1,18 @@
 /**
- * Shims built-in async functions and automatically wraps callbacks with "wrap"
+ * Shims built-in async functions and automatically wraps callbacks with 'wrap'
  * @param {function} wrap The function to return the new callback
  */
 
+
 module.exports = process.hookit = 'function' === typeof process.hookit ? process.hookit : hookit
+
+var alreadyRequired
 
 function hookit(wrap) {
 	var nextTick
 		, fs
-		, EventEmitter
 		, on
+		, EventEmitter
 		, removeListener
 		, addListener
 
@@ -22,29 +25,30 @@ function hookit(wrap) {
 			var original = this[name]
 			this[name] = function (callback) {
 				arguments[0] = wrap(callback, name)
-				return original.apply(this, arguments)
+				return callInsteadOfApply(original, this, arguments)
 			}
 		}
 	})
 
-	// Wrap process.nextTick
+	// // Wrap process.nextTick
 	nextTick = process.nextTick
 	process.nextTick = function wrappedNextTick(callback) {
-		return nextTick.call(this, wrap(callback, 'process.nextTick'))
+		arguments[0] = wrap(callback, 'process.nextTick')
+		return callInsteadOfApply(nextTick, this, arguments)
 	}
 
 	// Wrap fs module async functions
 	fs = require('fs')
 	Object.keys(fs).forEach(function (name) {
 		// If it has a *Sync counterpart, it's probably async
-		if (!fs.hasOwnProperty(name + "Sync")) return
+		if (!fs.hasOwnProperty(name + 'Sync')) return
 		var original = fs[name]
 		fs[name] = function () {
 			var i = arguments.length - 1
 			if (typeof arguments[i] === 'function') {
 				arguments[i] = wrap(arguments[i], 'fs.'+name)
 			}
-			return original.apply(this, arguments)
+			return callInsteadOfApply(original, this, arguments)
 		}
 	})
 
@@ -75,4 +79,41 @@ function hookit(wrap) {
 	}
 }
 
-var alreadyRequired
+
+function callInsteadOfApply(fn, that, args) {
+  // Avoid slow apply for common use
+  switch(args.length) {
+  case 0:
+    fn.call(that)
+    break
+  case 1:
+    fn.call(that, args[0])
+    break
+  case 2:
+    fn.call(that, args[0], args[1])
+    break
+  case 3:
+    fn.call(that, args[0], args[1], args[2])
+    break
+  case 4:
+    fn.call(that, args[0], args[1], args[2], args[3])
+    break
+  case 5:
+    fn.call(that, args[0], args[1], args[2], args[3], args[4])
+    break
+  case 6:
+    fn.call(that, args[0], args[1], args[2], args[3], args[4], args[5])
+    break
+  case 7:
+    fn.call(that, args[0], args[1], args[2], args[3], args[4], args[5], args[6])
+    break
+  case 8:
+    fn.call(that, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7])
+    break
+  case 9:
+    fn.call(that, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8])
+    break
+  default:
+    fn.apply(that, args)
+  }
+}
