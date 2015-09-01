@@ -16,16 +16,16 @@ function hookit(wrap) {
 		, removeListener
 		, addListener
 
-	if (alreadyRequired) return
+	if (alreadyRequired) return console.debug('hookit can only be called once')
 	alreadyRequired = true
 
 	// Wrap setTimeout and setInterval
 	;['setTimeout', 'setInterval', 'setImmediate'].forEach(function (name) {
-		if (this[name]) {
-			var original = this[name]
-			this[name] = function (callback) {
+		if (global[name]) {
+			var original = global[name]
+			global[name] = function (callback) {
 				arguments[0] = wrap(callback, name)
-				return callInsteadOfApply(original, this, arguments)
+				return callInsteadOfApply(original, global, arguments)
 			}
 		}
 	})
