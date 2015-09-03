@@ -16,7 +16,7 @@ function hookit(wrap) {
 		, removeListener
 		, addListener
 
-	if (alreadyRequired) return console.debug('hookit can only be called once')
+	if (alreadyRequired) return console.debug && console.debug('hookit can only be called once')
 	alreadyRequired = true
 
 	// Wrap setTimeout and setInterval
