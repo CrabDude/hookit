@@ -102,6 +102,6 @@ function callInsteadOfApply(fn, that, args) {
     return fn.call(that, args[0], args[1], args[2], args[3], args[4])
     break
   default:
-    fn.apply(that, args)
+    return fn.apply(that, args)
   }
 }
