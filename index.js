@@ -16,7 +16,7 @@ function hookit(wrap) {
 		, removeListener
 		, addListener
 
-	if (alreadyRequired) return console.debug && console.debug('hookit can only be called once')
+	if (alreadyRequired) return console.warn('hookit can only be called once')
 	alreadyRequired = true
 
 	// Wrap setTimeout and setInterval
@@ -84,34 +84,22 @@ function callInsteadOfApply(fn, that, args) {
   // Avoid slow apply for common use
   switch(args.length) {
   case 0:
-    fn.call(that)
+    return fn.call(that)
     break
   case 1:
-    fn.call(that, args[0])
+    return fn.call(that, args[0])
     break
   case 2:
-    fn.call(that, args[0], args[1])
+    return fn.call(that, args[0], args[1])
     break
   case 3:
-    fn.call(that, args[0], args[1], args[2])
+    return fn.call(that, args[0], args[1], args[2])
     break
   case 4:
-    fn.call(that, args[0], args[1], args[2], args[3])
+    return fn.call(that, args[0], args[1], args[2], args[3])
     break
   case 5:
-    fn.call(that, args[0], args[1], args[2], args[3], args[4])
-    break
-  case 6:
-    fn.call(that, args[0], args[1], args[2], args[3], args[4], args[5])
-    break
-  case 7:
-    fn.call(that, args[0], args[1], args[2], args[3], args[4], args[5], args[6])
-    break
-  case 8:
-    fn.call(that, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7])
-    break
-  case 9:
-    fn.call(that, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8])
+    return fn.call(that, args[0], args[1], args[2], args[3], args[4])
     break
   default:
     fn.apply(that, args)
