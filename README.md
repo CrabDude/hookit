@@ -23,4 +23,3 @@ process.nextTick(function() {
   throw new Error('here') // Will log "bummer" before we crash on error
 })
 ```
-
